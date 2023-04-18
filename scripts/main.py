@@ -1,42 +1,31 @@
-import socket, threading
+import socketserver
 
-LOCALHOST = "159.223.25.102"
+
+# LOCALHOST = "159.223.25.102"
+LOCALHOST = ''
 PORT = 1489
 
-class ClientThread(threading.Thread):
-    def __init__(self, client_socket, client_address):
-        threading.Thread.__init__(self)
-        self.client_socket = client_socket
-        print ("Новое подключение: ", client_address)
+class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    pass
 
-    def run(self):
-        while True:
-            try:
-                data = self.client_socket.recv(4096)
-                msg = data.decode('utf-8')
-                print(f"Сообщение: {msg}")
 
-                if msg == '':
-                    print("Отключение клиента")
-                    self.client_socket.shutdown(socket.SHUT_WR)
-                    break
-            except ConnectionResetError:
-                break
+class EventsHandler(socketserver.BaseRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client_ip = None
+        self.client_port = None
+
+    def handle(self):
+        data = self.request.recv(4096).strip()
         
+        self.client_ip = self.client_address[0]
+        self.client_port = self.client_address[1]
+
+        print(f'Address: {self.client_address}')
+        print(f'Data: {data.decode("utf-8")}')
+
+
 if __name__ == '__main__':
-    print('Start script')
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((LOCALHOST, PORT))
-    print("Сервер запущен!")
-    while True:
-        print('Start "while"')
-        try:
-            server.listen(1)
-            client_sock, client_address = server.accept()
-            newthread = ClientThread(client_sock, client_address)
-            newthread.start()
-        except KeyboardInterrupt:
-            print("\nОтключение сервера")
-            server.close()
-            break
-    print('\nEnd')
+    with ThreadingTCPServer((LOCALHOST, PORT), EventsHandler) as server:
+        server.serve_forever()
+
