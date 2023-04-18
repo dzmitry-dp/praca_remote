@@ -2,7 +2,7 @@ import socket
 from threading import Thread
 
 
-SERVER = "77.222.236.173"
+IP = "77.222.236.173"
 PORT = 1489
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,7 +32,7 @@ def send_to_server(data: str):
 
 def connect_to_server():
     try:
-        client.connect((SERVER, PORT))
+        client.connect((IP, PORT))
     except ConnectionRefusedError:
         print("Подключение не установлено")
         return False
