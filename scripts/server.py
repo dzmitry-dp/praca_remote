@@ -1,7 +1,6 @@
 import socketserver
 
 
-# LOCALHOST = "159.223.25.102"
 LOCALHOST = ''
 PORT = 1489
 
