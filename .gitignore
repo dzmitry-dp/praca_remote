@@ -1,0 +1,37 @@
+# git status
+# git add .
+# git log
+# git commit -am "v0.2"
+# git push -u origin master
+
+
+.git/*
+*__pycache__/
+*.vscode/
+
+*logs/
+*/android_app/*
+*.ssh/
+*.ssl/
+
+*.code-workspace
+*.mp4
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.gz
+*.tex
+*.pickle
+*.xlsx
+*.csv
+*.gif
+*.cmd
+*.exe
+*.gv
+*.db
+*.apk
+*.txt
+*.ppk
+*.pem
