@@ -1,14 +1,13 @@
 import os
 import ssl
 import logging
+from OpenSSL import SSL
 
 logging.basicConfig(filename='./static/logs/pyftpd.log', level=logging.DEBUG)
 
 from pyftpdlib.handlers import ThrottledDTPHandler, TLS_FTPHandler
 from pyftpdlib.servers import ThreadedFTPServer
 from pyftpdlib.authorizers import DummyAuthorizer
-
-from OpenSSL import SSL
 
 
 CERTFILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
