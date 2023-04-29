@@ -1,13 +1,16 @@
+from OpenSSL import SSL
+from threading import Thread
 import os
 import ssl
+import random
 import logging
-from OpenSSL import SSL
 
 logging.basicConfig(filename='./static/logs/pyftpd.log', level=logging.DEBUG)
 
 from pyftpdlib.handlers import ThrottledDTPHandler, TLS_FTPHandler
 from pyftpdlib.servers import ThreadedFTPServer
 from pyftpdlib.authorizers import DummyAuthorizer
+from pyftpdlib.filesystems import UnixFilesystem
 
 
 CERTFILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
@@ -51,15 +54,17 @@ class MyHandler(TLS_FTPHandler):
         os.remove(file)
 
 
-if __name__ == "__main__":
+def start_listen_for_user(login: str, password: str):
+    "Запуск ftp cервера для пользователя. Открытие случайного порта"
     authorizer = DummyAuthorizer()
-    authorizer.add_user('user', '12345', homedir='.', perm='elradfmwMT')
-    
+    authorizer.add_user(login, password, homedir='.', perm='elradfmwMT')
+
     dtp_handler = ThrottledDTPHandler
     dtp_handler.read_limit = 30720  # 30 Kb/sec (30 * 1024)
     dtp_handler.write_limit = 30720  # 30 Kb/sec (30 * 1024)
 
     ftps_handler = MyHandler
+    ftps_handler.abstracted_fs = UnixFilesystem
 
     # Настраиваем контекст SSL/TLS
     ftps_handler.tls_control_required = True
@@ -69,5 +74,12 @@ if __name__ == "__main__":
     ftps_handler.authorizer = authorizer
     ftps_handler.dtp_handler = dtp_handler
 
-    server = ThreadedFTPServer(('', 1488), ftps_handler) # listen on every IP on my machine on port 1488
-    server.serve_forever()
+    # Выбираем случайный порт из диапазона от 1024 до 65535
+    random_port = random.randint(1024, 65535)
+    server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
+    
+    ### Отдельным потоком принимаем входящую информацию
+        server_forever_thread = Thread(target = server.serve_forever, daemon = True, name = 'server_forever_thread')
+        server_forever_thread.start()
+    ###
+    return server, server_forever_thread, random_port, login, password
