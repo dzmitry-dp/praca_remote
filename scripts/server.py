@@ -33,13 +33,15 @@ class EventsHandler(socketserver.BaseRequestHandler):
     
     def select_reaction(self, decode_data) -> json:
         "Выбираю реакцию сервера на входные данные"
+        login = decode_data['signature']['name']
+        password = decode_data['signature']['surname']
         if decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
-            login = decode_data['signature']['name']
-            password = decode_data['signature']['surname']
+            msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
             # запустить ftp_server
             port = start_listen_for_user(login, password)
-            msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
             return json.dumps(options[msg_purpose](login, password, port))
+        elif decode_data['header']['title'] == '': #
+            pass
 
     def handle(self):
         # ожидаю зашифрованные данные
