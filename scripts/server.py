@@ -5,8 +5,8 @@ import json
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
-from scripts.purpose import options
-from scripts.ftp_server import start_listen_for_user
+from purpose import options
+from ftp_server import start_listen_for_user
 
 
 LOCALHOST = ''
@@ -30,6 +30,8 @@ class EventsHandler(socketserver.BaseRequestHandler):
         super().__init__(*args, **kwargs)
         self.client_ip = None
         self.client_port = None
+
+        self.server_forever_thread = None
     
     def select_reaction(self, decode_data) -> json:
         "Выбираю реакцию сервера на входные данные"
@@ -38,7 +40,7 @@ class EventsHandler(socketserver.BaseRequestHandler):
         if decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
             msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
             # запустить ftp_server
-            port = start_listen_for_user(login, password)
+            port, self.server_forever_thread = start_listen_for_user(login, password)
             return json.dumps(options[msg_purpose](login, password, port))
         elif decode_data['header']['title'] == '': #
             pass

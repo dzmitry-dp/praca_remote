@@ -79,7 +79,7 @@ def start_listen_for_user(login: str, password: str):
     server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
     
     ### Отдельным потоком принимаем входящую информацию
-        server_forever_thread = Thread(target = server.serve_forever, daemon = True, name = 'server_forever_thread')
-        server_forever_thread.start()
+    server_forever_thread = Thread(target = server.serve_forever, daemon = True, name = 'server_forever_thread')
+    server_forever_thread.start()
     ###
-    return server, server_forever_thread, random_port, login, password
+    return random_port, server_forever_thread
