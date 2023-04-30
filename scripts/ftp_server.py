@@ -76,10 +76,10 @@ def start_listen_for_user(login: str, password: str):
 
     # Выбираем случайный порт из диапазона от 1024 до 65535
     random_port = random.randint(1024, 65535)
-    server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
-    
-    ### Отдельным потоком принимаем входящую информацию
-    server_forever_thread = Thread(target = server.serve_forever, daemon = True, name = 'server_forever_thread')
-    server_forever_thread.start()
-    ###
-    return random_port, server_forever_thread
+    # server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
+    with ThreadedFTPServer(('', random_port), ftps_handler) as server:
+        ### Отдельным потоком принимаем входящую информацию
+        server_forever_thread = Thread(target = server.serve_forever, daemon = True, name = 'server_forever_thread')
+        server_forever_thread.start()
+        ###
+    return random_port, server

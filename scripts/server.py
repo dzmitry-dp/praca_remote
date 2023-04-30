@@ -3,7 +3,7 @@ import socketserver
 import hashlib
 import json
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
+from Crypto.Util.Padding import pad, unpad
 
 from purpose import options
 from ftp_server import start_listen_for_user
@@ -31,19 +31,21 @@ class EventsHandler(socketserver.BaseRequestHandler):
         self.client_ip = None
         self.client_port = None
 
-        self.server_forever_thread = None
-    
+        self.server = None
+
     def select_reaction(self, decode_data) -> json:
         "Выбираю реакцию сервера на входные данные"
         login = decode_data['signature']['name']
         password = decode_data['signature']['surname']
-        if decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
+        if decode_data['header']['title'] == '': #
+            pass
+        elif decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
             msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
             # запустить ftp_server
-            port, self.server_forever_thread = start_listen_for_user(login, password)
+            port, self.server = start_listen_for_user(login, password)
             return json.dumps(options[msg_purpose](login, password, port))
-        elif decode_data['header']['title'] == '': #
-            pass
+        elif decode_data['header']['title'] == 'download_thread':
+            
 
     def handle(self):
         # ожидаю зашифрованные данные
@@ -69,13 +71,15 @@ class EventsHandler(socketserver.BaseRequestHandler):
         else:
             reaction: str = self.select_reaction(decode_data)
 
+        print(f'Reaction: {reaction}')
+
         # Зашифровываем данные
         cipher = AES.new(key, AES.MODE_CBC, b'\x00'*16)
         json_data = json.dumps(reaction)
         padded_data = pad(json_data.encode('utf-8'), AES.block_size)
         encrypted_data = cipher.encrypt(padded_data)
-        
-        self.request.sendall(bytes(encrypted_data, 'UTF-8'))
+
+        self.request.sendall(encrypted_data)
 
         # # Открываем файл на сервере
         # with open('file.txt', 'rb') as file:
