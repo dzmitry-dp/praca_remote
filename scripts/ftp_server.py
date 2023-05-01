@@ -56,8 +56,11 @@ class MyHandler(TLS_FTPHandler):
 
 def start_listen_for_user(login: str, password: str):
     "Запуск ftp cервера для пользователя. Открытие случайного порта"
+    print('[INFO]: ftp_server.py: start_listen_for_user()')
     authorizer = DummyAuthorizer()
     authorizer.add_user(login, password, homedir='.', perm='elradfmwMT')
+    print(f'[DEBUG]: login = {login}, password = {password}')
+
 
     dtp_handler = ThrottledDTPHandler
     dtp_handler.read_limit = 30720  # 30 Kb/sec (30 * 1024)
@@ -75,11 +78,13 @@ def start_listen_for_user(login: str, password: str):
     ftps_handler.dtp_handler = dtp_handler
 
     # Выбираем случайный порт из диапазона от 1024 до 65535
-    random_port = random.randint(1024, 65535)
-    # server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
-    with ThreadedFTPServer(('', random_port), ftps_handler) as server:
-        ### Отдельным потоком принимаем входящую информацию
-        server_forever_thread = Thread(target = server.serve_forever, daemon = True, name = 'server_forever_thread')
-        server_forever_thread.start()
-        ###
-    return random_port, server
+    # random_port = random.randint(1024, 65535)
+    random_port = 1488 # порт открыт в ufw
+    ftp_server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
+    print(f'[DEBUG]: Started ThreadedFTPServer by port: {random_port}')
+    ### Отдельным потоком принимаем входящую информацию
+    server_forever_thread = Thread(target = ftp_server.serve_forever, daemon = True, name = 'server_forever_thread')
+    server_forever_thread.start()
+    ###
+    
+    return random_port, ftp_server
