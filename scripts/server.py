@@ -20,7 +20,6 @@ def hash_raw(input_str: str, _salt: int) -> bytes: # input_str = ip, salt = port
     hash_from_ip_port: str = hashlib.sha1(mix_variable).hexdigest()
     return hash_from_ip_port.encode('utf-8')[:32]
     
-
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
@@ -42,8 +41,24 @@ class EventsHandler(socketserver.BaseRequestHandler):
             return ''
         elif decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
             msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
-            # запустить ftp_server
-            port, self.ftp_server = start_listen_for_user(login, password)
+            
+            try:
+                # свободен ли порт
+                # если свободен, то создаем сервер
+                # запустить ftp_server
+                port, self.ftp_server = start_listen_for_user(login, password)
+                pass
+            except:
+                # если порт не свободен, то добавляем пользователя
+                # получаем доступ к объекту authorizer
+                authorizer = self.ftp_server.handler.authorizer
+                # добавляем пользователя в список пользователей
+                username = 'myuser'
+                password = 'mypassword'
+                homedir = '/path/to/user/home'
+                authorizer.add_user(username, password, homedir)
+                pass
+
             return json.dumps(options[msg_purpose](login, password, port))
 
     def handle(self):

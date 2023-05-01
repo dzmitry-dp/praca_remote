@@ -61,7 +61,6 @@ def start_listen_for_user(login: str, password: str):
     authorizer.add_user(login, password, homedir='.', perm='elradfmwMT')
     print(f'[DEBUG]: login = {login}, password = {password}')
 
-
     dtp_handler = ThrottledDTPHandler
     dtp_handler.read_limit = 30720  # 30 Kb/sec (30 * 1024)
     dtp_handler.write_limit = 30720  # 30 Kb/sec (30 * 1024)
