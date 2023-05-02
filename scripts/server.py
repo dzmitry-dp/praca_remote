@@ -11,6 +11,7 @@ from ftp_server import start_listen_for_user
 
 LOCALHOST = ''
 PORT = 1489
+FTP_PORT = 1488
 
 def hash_raw(input_str: str, _salt: int) -> bytes: # input_str = ip, salt = port
     "Возвращаю байты хеша"
@@ -38,8 +39,6 @@ class EventsHandler(socketserver.BaseRequestHandler):
         if decode_data['header']['title'] == '': #
             return ''
         elif decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
-            msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
-            port = 1488
             try:
                 # свободен ли порт
                 # если свободен, то создаем сервер
@@ -49,8 +48,14 @@ class EventsHandler(socketserver.BaseRequestHandler):
                 # если порт не свободен, то добавляем пользователя
                 # добавляем пользователя в список пользователей
                 print('New user')
+            msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
+            cert = self._get_public_key()
+            return json.dumps(options[msg_purpose](login, password, FTP_PORT, cert))
 
-            return json.dumps(options[msg_purpose](login, password, port))
+    def _get_public_key(self) -> str:
+        with open('./.ssl/cert.pem') as file:
+            file_data = file.read()
+        return file_data
 
     def handle(self):
         # ожидаю зашифрованные данные
@@ -86,13 +91,6 @@ class EventsHandler(socketserver.BaseRequestHandler):
         encrypted_data = cipher.encrypt(padded_data)
 
         self.request.sendall(encrypted_data)
-
-        # # Открываем файл на сервере
-        # with open('file.txt', 'rb') as file:
-        #     # Читаем содержимое файла
-        #     file_data = file.read()
-        #     # Отправляем содержимое файла клиенту
-        #     self.request.sendall(file_data)
 
         print('---')
 
