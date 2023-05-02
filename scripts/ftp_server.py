@@ -12,7 +12,6 @@ from pyftpdlib.servers import ThreadedFTPServer
 from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.filesystems import UnixFilesystem
 
-
 CERTFILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                         "../.ssl/cert.pem"))
 
@@ -53,7 +52,6 @@ class MyHandler(TLS_FTPHandler):
         # remove partially uploaded files
         import os
         os.remove(file)
-
 
 def start_listen_for_user(login: str, password: str):
     "Запуск ftp cервера для пользователя. Открытие случайного порта"

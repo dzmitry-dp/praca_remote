@@ -8,7 +8,6 @@ from Crypto.Util.Padding import pad, unpad
 from purpose import options
 from ftp_server import start_listen_for_user
 
-
 LOCALHOST = ''
 PORT = 1489
 FTP_PORT = 1488
@@ -23,7 +22,6 @@ def hash_raw(input_str: str, _salt: int) -> bytes: # input_str = ip, salt = port
     
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
-
 
 class EventsHandler(socketserver.BaseRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -93,7 +91,6 @@ class EventsHandler(socketserver.BaseRequestHandler):
         self.request.sendall(encrypted_data)
 
         print('---')
-
 
 if __name__ == '__main__':
     print('---')
