@@ -30,8 +30,6 @@ class EventsHandler(socketserver.BaseRequestHandler):
         self.client_ip = None
         self.client_port = None
 
-        self.ftp_server = None
-
     def select_reaction(self, decode_data) -> json:
         "Выбираю реакцию сервера на входные данные"
         login = decode_data['signature']['name']
@@ -41,23 +39,16 @@ class EventsHandler(socketserver.BaseRequestHandler):
             return ''
         elif decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
             msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
-            
+            port = 1488
             try:
                 # свободен ли порт
                 # если свободен, то создаем сервер
                 # запустить ftp_server
-                port, self.ftp_server = start_listen_for_user(login, password)
-                pass
-            except:
+                start_listen_for_user(login, password)
+            except OSError:
                 # если порт не свободен, то добавляем пользователя
-                # получаем доступ к объекту authorizer
-                authorizer = self.ftp_server.handler.authorizer
                 # добавляем пользователя в список пользователей
-                username = 'myuser'
-                password = 'mypassword'
-                homedir = '/path/to/user/home'
-                authorizer.add_user(username, password, homedir)
-                pass
+                print('New user')
 
             return json.dumps(options[msg_purpose](login, password, port))
 

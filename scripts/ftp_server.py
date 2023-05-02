@@ -27,6 +27,7 @@ class MyHandler(TLS_FTPHandler):
     def on_disconnect(self):
         # do something when client disconnects
         print(f"IP: {self.remote_ip} PORT: {self.remote_port} disconnected")
+        print('---')
 
     def on_login(self, username):
         # do something when user login
@@ -58,7 +59,7 @@ def start_listen_for_user(login: str, password: str):
     "Запуск ftp cервера для пользователя. Открытие случайного порта"
     print('[INFO]: ftp_server.py: start_listen_for_user()')
     authorizer = DummyAuthorizer()
-    authorizer.add_user(login, password, homedir='.', perm='elradfmwMT')
+    authorizer.add_user(login, password, homedir='./ftp', perm='elradfmwMT')
     print(f'[DEBUG]: login = {login}, password = {password}')
 
     dtp_handler = ThrottledDTPHandler
@@ -86,4 +87,3 @@ def start_listen_for_user(login: str, password: str):
     server_forever_thread.start()
     ###
     
-    return random_port, ftp_server
