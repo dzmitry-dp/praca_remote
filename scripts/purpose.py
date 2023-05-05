@@ -13,7 +13,7 @@ def send_ssl_port(login: str, password: str, port: int, cert: str) -> dict:
             'worker_base': './worker_base'
         },
         'signature': {
-            'update': True # требуются ли клиенту обновления
+            'update': False # требуются ли клиенту обновления
         }
     }
 
