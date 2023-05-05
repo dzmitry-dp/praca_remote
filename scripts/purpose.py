@@ -9,9 +9,11 @@ def send_ssl_port(login: str, password: str, port: int, cert: str) -> dict:
         'payload' : {
             'ftp_port': port, # номер порта по которому сейчас доступен ftp сервер
             'cert': cert, # публичный сертификат доступа к ftp серверу
+            'employer_base': './employer_base/rockbit.db',
+            'worker_base': './worker_base'
         },
         'signature': {
-            'update': False # требуются ли клиенту обновления
+            'update': True # требуются ли клиенту обновления
         }
     }
 

@@ -13,10 +13,10 @@ from pyftpdlib.authorizers import DummyAuthorizer
 from pyftpdlib.filesystems import UnixFilesystem
 
 CERTFILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                        "../.ssl/cert.pem"))
+                                        "../.ssl/public.crt"))
 
 KEYFILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                        "../.ssl/keycert.pem"))
+                                        "../.ssl/private.key"))
 
 class MyHandler(TLS_FTPHandler):
 
@@ -60,12 +60,7 @@ def start_listen_for_user(login: str, password: str):
     authorizer.add_user(login, password, homedir='./ftp', perm='elradfmwMT')
     print(f'[DEBUG]: login = {login}, password = {password}')
 
-    dtp_handler = ThrottledDTPHandler
-    dtp_handler.read_limit = 30720  # 30 Kb/sec (30 * 1024)
-    dtp_handler.write_limit = 30720  # 30 Kb/sec (30 * 1024)
-
     ftps_handler = MyHandler
-    ftps_handler.abstracted_fs = UnixFilesystem
 
     # Настраиваем контекст SSL/TLS
     ftps_handler.tls_control_required = True
@@ -73,7 +68,6 @@ def start_listen_for_user(login: str, password: str):
     ftps_handler.certfile = CERTFILE  # Указываем путь к сертификату сервера
     ftps_handler.keyfile = KEYFILE # Указываем путь к приватному ключу сервера
     ftps_handler.authorizer = authorizer
-    ftps_handler.dtp_handler = dtp_handler
 
     # Выбираем случайный порт из диапазона от 1024 до 65535
     # random_port = random.randint(1024, 65535)

@@ -51,7 +51,7 @@ class EventsHandler(socketserver.BaseRequestHandler):
             return json.dumps(options[msg_purpose](login, password, FTP_PORT, cert))
 
     def _get_public_key(self) -> str:
-        with open('./.ssl/cert.pem') as file:
+        with open('./.ssl/public.crt') as file:
             file_data = file.read()
         return file_data
 
@@ -72,7 +72,6 @@ class EventsHandler(socketserver.BaseRequestHandler):
         print(f'Address: {self.client_address}')
         print(f'Key: {key}')
         print(f'Decoded Data: {decode_data}')
-        print(f'Decoded Data Type: {type(decode_data)}')
 
         # выбираю реакцию на входящие данные от сервера
         if not decode_data:

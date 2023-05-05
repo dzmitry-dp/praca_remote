@@ -13,6 +13,7 @@
 */android_app/*
 *.ssh/
 *.ssl/
+*ftp/
 
 *.code-workspace
 *.mp4
