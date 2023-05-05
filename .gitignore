@@ -35,3 +35,5 @@
 *.apk
 *.ppk
 *.pem
+*.key
+*.crt
