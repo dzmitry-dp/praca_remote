@@ -61,8 +61,6 @@ def start_listen_for_user(login: str, password: str, port: int):
     print(f'[DEBUG]: login = {login}, password = {password}')
 
     ftps_handler = MyHandler
-
-    # Настраиваем контекст SSL/TLS
     ftps_handler.tls_control_required = True
     ftps_handler.tls_data_required = True
     ftps_handler.certfile = CERTFILE  # Указываем путь к сертификату сервера

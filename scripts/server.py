@@ -26,69 +26,81 @@ class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 class EventsHandler(socketserver.BaseRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.key = None
         self.client_ip = None
         self.client_port = None
 
-    def select_reaction(self, decode_data) -> json:
+    def _select_reaction(self, decode_data) -> json:
         "Выбираю реакцию сервера на входные данные"
-        login = decode_data['signature']['name']
-        password = decode_data['signature']['surname']
 
-        if decode_data['header']['title'] == '': #
-            return ''
+        if decode_data == {}: # не удалось декодировать сообщение
+            reaction = None
         elif decode_data['header']['title'] == 'get_handshake': # если проверка связи / рукопожатие
+            login = decode_data['signature']['name']
+            password = decode_data['signature']['surname']
             try:
                 # свободен ли порт
                 # если свободен, то создаем сервер
-                # запустить ftp_server
                 start_listen_for_user(login, password, FTP_PORT)
                 print(f'Port {FTP_PORT} is free')
             except OSError:
-                # если порт не свободен, то добавляем пользователя
-                # добавляем пользователя в список пользователей
-                print('The port is already occupied')
+                # если порт не свободен, то его уже прослушивает скрипт
+                print(f'The port: {FTP_PORT} is already occupied')
             msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
             cert = self._get_public_key()
-            return json.dumps(options[msg_purpose](login, password, FTP_PORT, cert))
+            reaction = json.dumps(options[msg_purpose](login, password, FTP_PORT, cert))
+        
+        print(f'Send Reaction: {reaction}')
+        return reaction
 
     def _get_public_key(self) -> str:
         with open('./.ssl/public.crt') as file:
             file_data = file.read()
         return file_data
 
-    def handle(self):
-        # ожидаю зашифрованные данные
-        encrypted_data = self.request.recv(4096).strip()
-
-        self.client_ip = self.client_address[0]
-        self.client_port = self.client_address[1]
+    def _decrypt_input_msg(self, encrypted_data) -> json:
         # вычисляю ключ
-        key: bytes = hash_raw(self.client_ip, PORT)
-
+        self.key: bytes = hash_raw(self.client_ip, PORT)
         # Расшифровываем данные
-        cipher = AES.new(key, AES.MODE_CBC, b'\x00'*16)
-        decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
-        decode_data: dict = json.loads(decrypted_data.decode('utf-8'))
+        cipher = AES.new(self.key, AES.MODE_CBC, b'\x00'*16)
+        try:
+            decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
+            decode_data: dict = json.loads(decrypted_data.decode('utf-8'))
+        except ValueError:
+            print('Failed to decode the message')
+            return {}
 
-        print(f'Address: {self.client_address}')
-        print(f'Key: {key}')
+        print(f'Key: {self.key}')
         print(f'Decoded Data: {decode_data}')
 
-        # выбираю реакцию на входящие данные от сервера
-        if not decode_data:
-            reaction = '' # клиент закрывает соединение
-        else:
-            reaction: json = self.select_reaction(decode_data)
+        return decode_data
 
-        print(f'Send Reaction: {reaction}')
-
+    def _encrypt_output_msg(self, reaction) -> bytes:
         # Зашифровываем данные
-        cipher = AES.new(key, AES.MODE_CBC, b'\x00'*16)
+        cipher = AES.new(self.key, AES.MODE_CBC, b'\x00'*16)
         json_data = json.dumps(reaction)
         padded_data = pad(json_data.encode('utf-8'), AES.block_size)
         encrypted_data = cipher.encrypt(padded_data)
+        return encrypted_data
 
-        self.request.sendall(encrypted_data)
+    def handle(self):
+        # ожидаю зашифрованные данные
+        input_data = self.request.recv(4096).strip()
+
+        print(f'Address: {self.client_address}')
+        self.client_ip = self.client_address[0]
+        self.client_port = self.client_address[1]
+
+        # декодирую входящее сооющение
+        decode_data = self._decrypt_input_msg(input_data)
+        # выбираю реакцию на входящие данные от сервера
+        reaction: json = self._select_reaction(decode_data)
+        
+        if reaction != None:
+            # кодирую ответ
+            encrypted_data = self._encrypt_output_msg(reaction)
+            # отправляю клиенту закодированное сообщение
+            self.request.sendall(encrypted_data)
 
         print('---')
 
