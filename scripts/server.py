@@ -41,11 +41,12 @@ class EventsHandler(socketserver.BaseRequestHandler):
                 # свободен ли порт
                 # если свободен, то создаем сервер
                 # запустить ftp_server
-                start_listen_for_user(login, password)
+                start_listen_for_user(login, password, FTP_PORT)
+                print(f'Port {FTP_PORT} is free')
             except OSError:
                 # если порт не свободен, то добавляем пользователя
                 # добавляем пользователя в список пользователей
-                print('New user')
+                print('The port is already occupied')
             msg_purpose = 0 # рукопожатие произошло / проверка связи с сервером выполнена / отправляю порт где будет проходить обмен данными
             cert = self._get_public_key()
             return json.dumps(options[msg_purpose](login, password, FTP_PORT, cert))

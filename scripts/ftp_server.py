@@ -53,7 +53,7 @@ class MyHandler(TLS_FTPHandler):
         import os
         os.remove(file)
 
-def start_listen_for_user(login: str, password: str):
+def start_listen_for_user(login: str, password: str, port: int):
     "Запуск ftp cервера для пользователя. Открытие случайного порта"
     print('[INFO]: ftp_server.py: start_listen_for_user()')
     authorizer = DummyAuthorizer()
@@ -67,13 +67,11 @@ def start_listen_for_user(login: str, password: str):
     ftps_handler.tls_data_required = True
     ftps_handler.certfile = CERTFILE  # Указываем путь к сертификату сервера
     ftps_handler.keyfile = KEYFILE # Указываем путь к приватному ключу сервера
+    ftps_handler.passive_ports = range(40000, 50000)
     ftps_handler.authorizer = authorizer
 
-    # Выбираем случайный порт из диапазона от 1024 до 65535
-    # random_port = random.randint(1024, 65535)
-    random_port = 1488 # порт открыт в ufw
-    ftp_server = ThreadedFTPServer(('', random_port), ftps_handler) # listen on every IP on my machine on random port
-    print(f'[DEBUG]: Started ThreadedFTPServer by port: {random_port}')
+    ftp_server = ThreadedFTPServer(('', port), ftps_handler)
+    print(f'[DEBUG]: Started ThreadedFTPServer by port: {port}')
     ### Отдельным потоком принимаем входящую информацию
     server_forever_thread = Thread(target = ftp_server.serve_forever, daemon = True, name = 'server_forever_thread')
     server_forever_thread.start()
